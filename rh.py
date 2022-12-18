@@ -3,12 +3,15 @@
 
 import math
 import os
+import socket
 import time
 import board
 import adafruit_dht
 import influxdb_client
 from influxdb_client import InfluxDBClient, Point, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
+
+INTERVAL = 30
 
 org = "dave@vieglais.com"
 client = influxdb_client.InfluxDBClient(
@@ -19,6 +22,16 @@ client = influxdb_client.InfluxDBClient(
 bucket="dht22_test"
 write_api = client.write_api(write_options=SYNCHRONOUS)
 
+def get_ipaddress():
+  ipaddr = None
+  try:
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+    ipaddr = s.getsockname()[0]
+    s.close()
+  except Exception as e:
+    print(e)
+  return ipaddr
 
 def saturatedVaporPressure(t):
   return 0.6108 * math.exp(17.27 * t / (t + 237.3))
@@ -44,10 +57,18 @@ class DHT22:
     )
     return point
 
+def ip_point():
+  ipaddr = get_ipaddress()
+  return (
+    Point("test")
+    .tag("name", "ipaddr")
+    .field("ip", ipaddr)
+  )
+
 sensors = []
-sensors.append(DHT22(board.D4, name="HT-1"))
-sensors.append(DHT22(board.D17, name="HT-2"))
-#rhtd.append(adafruit_dht.DHT22(board.D2))
+sensors.append(DHT22(board.D17, name="HT-1"))
+sensors.append(DHT22(board.D18, name="HT-2"))
+sensors.append(DHT22(board.D19, name="HT-3"))
 while True:
   for sensor in sensors:
     try:
@@ -56,5 +77,6 @@ while True:
       write_api.write(bucket=bucket, org=org, record=point)
     except RuntimeError as e:
       print(e)
-  time.sleep(5.0)
+  write_api.write(bucket=bucket, org=org, record=ip_point())
+  time.sleep(INTERVAL)
 
