@@ -13,7 +13,7 @@ from influxdb_client import InfluxDBClient, Point, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
 from ADCPi import ADCPi
 
-INTERVAL = 10
+INTERVAL = 30
 
 org = "dave@vieglais.com"
 client = influxdb_client.InfluxDBClient(

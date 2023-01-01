@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "8b117f04c196e6908df2feadf76df1f448d460f2a2a4c1e871daf2a194034530"
+            "sha256": "a91e6ef0986287c0dec10e0470ee0741ccb713e70de82b72b049fe0252c09b46"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -16,13 +16,17 @@
         ]
     },
     "default": {
+        "abelectronics": {
+            "git": "https://github.com/abelectronicsuk/ABElectronics_Python_Libraries.git",
+            "ref": "b6c37b21c0e500eadecead21c4432a44ffb53c9d"
+        },
         "adafruit-blinka": {
             "hashes": [
-                "sha256:37614bbfd8a00f512c6b84ded051e363c5462436b748c7e0bc448ebb8c02b184",
-                "sha256:d2edde44278181ec0d5bf54a0556e6d1cb2aad15da4e0a98f7f134a5a3a82c25"
+                "sha256:2a2269c7ee9c975f768baca5e10c512a65e0ac98977edbed3f8f6d5a3a0dc411",
+                "sha256:4b290aca7312cf4342eef225e857b58118b547b30da3561ee128165930a7b03e"
             ],
             "markers": "python_full_version >= '3.7.0'",
-            "version": "==8.9.0"
+            "version": "==8.10.0"
         },
         "adafruit-circuitpython-busdevice": {
             "hashes": [
@@ -55,10 +59,10 @@
         },
         "adafruit-platformdetect": {
             "hashes": [
-                "sha256:be1071fcd001383da96ad073235e5766a6d34ed6dfdeb4d4203c75b1883ec988"
+                "sha256:5129ce7ff9f0b80c99a6fcbf717a50b6458a5cf2aed218f51c5c2896ba5e7103"
             ],
             "markers": "python_full_version >= '3.7.0'",
-            "version": "==3.37.0"
+            "version": "==3.38.0"
         },
         "adafruit-pureio": {
             "hashes": [

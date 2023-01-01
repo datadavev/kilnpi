@@ -7,6 +7,7 @@ name = "pypi"
 adafruit-circuitpython-dht = "*"
 prometheus-client = "*"
 influxdb-client = "*"
+abelectronics = {git = "https://github.com/abelectronicsuk/ABElectronics_Python_Libraries.git"}
 
 [dev-packages]
 
