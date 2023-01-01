@@ -1,0 +1,13 @@
+[Unit]
+Description=Kiln Control
+After=network.target
+
+[Service]
+User=vieglais
+restart=always
+Type=simple
+WorkingDirectory=/home/vieglais/workspace/kilnpi
+ExecStart=/home/vieglais/.local/bin/pipenv run python3 /home/vieglais/workspace/kilnpi/rh.py
+
+[Install]
+WantedBy=multi-user.target
