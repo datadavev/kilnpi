@@ -7,6 +7,7 @@ name = "pypi"
 adafruit-circuitpython-dht = "*"
 prometheus-client = "*"
 influxdb-client = "*"
+click = "*"
 
 [dev-packages]
 
