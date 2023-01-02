@@ -83,6 +83,7 @@ def stop_fan(fan_id:int):
 
 @click.group()
 @click.pass_context
+@click.option("--verbosity", default="INFO", help="Logging level")
 def main(ctx, verbosity):
     verbosity = verbosity.upper()
     logging_config["loggers"][""]["level"] = verbosity
@@ -92,6 +93,7 @@ def main(ctx, verbosity):
 
 
 @main.command("start")
+@click.pass_context
 @click.argument("fans", nargs=-1)
 def start_fans(ctx, fans):
     L = get_logger()
@@ -104,9 +106,11 @@ def start_fans(ctx, fans):
             continue
         L.info("Starting fan %s", fan_id)
         start_fan(fan_id)
+    RPi.GPIO.cleanup()
 
 
 @main.command("stop")
+@click.pass_context
 @click.argument("fans", nargs=-1)
 def stop_fans(ctx, fans):
     L = get_logger()
@@ -119,11 +123,13 @@ def stop_fans(ctx, fans):
             continue
         L.info("Stopping fan %s", fan_id)
         stop_fan(fan_id)
+    RPi.GPIO.cleanup()
 
 
 @main.command("status")
+@click.pass_context
 @click.argument("fans", nargs=-1)
-def stop_fans(ctx, fans):
+def get_fans(ctx, fans):
     L = get_logger()
     RPi.GPIO.setmode(RPi.GPIO.BOARD)
 
@@ -134,5 +140,7 @@ def stop_fans(ctx, fans):
             continue
         status = get_fan(fan_id)
         print(f"Fan {fan_id} status: {status}")
+    RPi.GPIO.cleanup()
 
-
+if __name__ == "__main__":
+    main()
