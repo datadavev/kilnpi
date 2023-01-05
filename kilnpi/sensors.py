@@ -18,8 +18,8 @@ def vaporPressure(t: float, rh: float) -> float:
 
 
 def absoluteHumidity(t: float, rh: float) -> float:
-    svp = saturatedVaporPressure(t)
-    return (svp * rh) / (t * 100 * 461.5)
+    # g / m3
+    return (6.112 * math.exp((17.67*t)/(t+243.5)) * rh * 2.1674) / (273.15+t)
 
 
 class ADCBoard(ADCPi.ADCPi):
