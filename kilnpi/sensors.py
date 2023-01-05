@@ -12,8 +12,14 @@ def saturatedVaporPressure(t: float) -> float:
 
 
 def vaporPressure(t: float, rh: float) -> float:
+    # kPa
     svp = saturatedVaporPressure(t)
     return svp * rh / 100
+
+
+def absoluteHumidity(t: float, rh: float) -> float:
+    svp = saturatedVaporPressure(t)
+    return (svp * rh) / (t * 100 * 461.5)
 
 
 class ADCBoard(ADCPi.ADCPi):
@@ -64,6 +70,7 @@ class DHT22(BaseSensor):
             .field("T", tc)
             .field("RH", rh)
             .field("VP", vaporPressure(tc, rh))
+            .field("AH", absoluteHumidity(tc, rh))
         )
         return point
 
