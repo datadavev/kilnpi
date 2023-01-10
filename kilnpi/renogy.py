@@ -37,11 +37,10 @@ class RenogyRover(kilnpi.sensors.BaseSensor):
         self.worker.disconnect()
 
     def on_connected(self, app: renogy.btoneapp.BTOneApp):
-        print("bt connected")
+        print("Renogy bt connected")
         app.poll_params()
 
     def on_data_received(self, app: renogy.btoneapp.BTOneApp, data):
-        print(f"on data = {data}")
         self.last_data = data
 
     def get_point(self, **kwparams):
@@ -51,7 +50,7 @@ class RenogyRover(kilnpi.sensors.BaseSensor):
             self._preget_point()
             .field("battery_percentage", self.last_data["battery_percentage"])
             .field("battery_voltage", self.last_data["battery_voltage"])
-            .field("battery_amps", self.last_data["battery_amps"])
+            .field("battery_current", self.last_data["battery_current"])
             .field("load_voltage", self.last_data["load_voltage"])
             .field("load_current", self.last_data["load_current"])
             .field("load_power", self.last_data["load_power"])
