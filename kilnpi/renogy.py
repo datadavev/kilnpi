@@ -1,5 +1,17 @@
+import threading
 import kilnpi.sensors
 import renogy.btoneapp
+
+class RenogyRoverCollector(threading.Thread):
+    def __init__(self, device=None):
+        super().__init__()
+        self.device = device
+
+    def disconnect(self):
+        self.device.disconnect()
+
+    def run(self):
+        self.device.connect()
 
 
 class RenogyRover(kilnpi.sensors.BaseSensor):
@@ -9,7 +21,7 @@ class RenogyRover(kilnpi.sensors.BaseSensor):
         super().__init__(group, name)
         self.adapter = adapter
         self.mac_addr = mac_addr
-        self.device = renogy.btoneapp.BTOneApp(
+        device = renogy.btoneapp.BTOneApp(
             self.adapter,
             self.mac_addr,
             self.name,
@@ -17,9 +29,12 @@ class RenogyRover(kilnpi.sensors.BaseSensor):
             self.on_data_received,
             interval,
         )
+        self.worker = RenogyRoverCollector(device=device)
         self.last_data = None
-        #TODO: connect needs to be started on a separate thread since it has its own run loop.
-        self.device.connect()
+        self.worker.start()
+
+    def shutdown(self):
+        self.worker.disconnect()
 
     def on_connected(self, app: renogy.btoneapp.BTOneApp):
         print("bt connected")

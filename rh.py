@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 import os
+import signal
 import time
 import board
 import influxdb_client
@@ -11,8 +12,8 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 import kilnpi.sensors
 import kilnpi.renogy
 
+TERMINATE = False
 INTERVAL = 30
-
 
 def main():
     org = "dave@vieglais.com"
@@ -26,6 +27,15 @@ def main():
     sensors = []
     group = "kiln"
     sensors.append(kilnpi.sensors.IPAddressSensor(group))
+    sensors.append(
+        kilnpi.renogy.RenogyRover(
+            group,
+            name="BT-TH-7724B9F3",
+            mac_addr="F4:60:77:24:B9:F3",
+            adapter="hci0",
+            interval=INTERVAL,
+        )
+    )
     sensors.append(kilnpi.sensors.DHT22(board.D17, group, name="HT-1"))
     sensors.append(kilnpi.sensors.DHT22(board.D27, group, name="HT-2"))
     sensors.append(kilnpi.sensors.DHT22(board.D22, group, name="HT-3"))
@@ -33,18 +43,7 @@ def main():
     sensors.append(kilnpi.sensors.CurrentSensor(group, "Fan-1", adc_board, 1))
     sensors.append(kilnpi.sensors.CurrentSensor(group, "Fan-2", adc_board, 2))
     sensors.append(kilnpi.sensors.CurrentSensor(group, "Fan-3", adc_board, 3))
-    # The renogy thing starts it's own loop. Need to refactor to a separate
-    # app or different device control
-    #sensors.append(
-    #    kilnpi.renogy.RenogyRover(
-    #        group,
-    #        name="BT-TH-7724B9F3",
-    #        mac_addr="F4:60:77:24:B9:F3",
-    #        adapter="hci0",
-    #        interval=INTERVAL,
-    #    )
-    #)
-    while True:
+    while not TERMINATE:
         with client.write_api(
             write_options=influxdb_client.WriteOptions(
                 batch_size=len(sensors),
@@ -66,7 +65,8 @@ def main():
                 except ValueError as e:
                     print(e)
         time.sleep(INTERVAL)
-
+    for sensor in sensors:
+        sensor.shutdown()
 
 if __name__ == "__main__":
     main()

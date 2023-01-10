@@ -40,6 +40,9 @@ class BaseSensor:
         self.group = group
         self.name = name
 
+    def shutdown(self):
+        pass
+
     def _preget_point(self):
         return Point(self.group).tag("name", self.name)
 
