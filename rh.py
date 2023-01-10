@@ -61,6 +61,8 @@ def main():
                     write_api.write(bucket=bucket, org=org, record=point)
                 except RuntimeError as e:
                     print(e)
+                except ValueError as e:
+                    print(e)
         time.sleep(INTERVAL)
 
 
