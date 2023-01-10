@@ -20,14 +20,16 @@ class RenogyRover(kilnpi.sensors.BaseSensor):
         self.last_data = None
 
     def on_connected(self, app: renogy.btoneapp.BTOneApp):
+        print("bt connected")
         app.poll_params()
 
     def on_data_received(self, app: renogy.btoneapp.BTOneApp, data):
+        print(f"on data = {data}")
         self.last_data = data
 
     def get_point(self, **kwparams):
         if self.last_data is None:
-            raise ValueError("No data available for %s.", self.name)
+            raise ValueError(f"No data available for {self.name}")
         point = (
             self._preget_point()
             .field("battery_percentage", self.last_data["battery_percentage"])
