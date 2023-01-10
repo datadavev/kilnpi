@@ -1,7 +1,7 @@
 from threading import Timer
 import logging 
-from renogy.BLE import DeviceManager, Device
-from renogy.Utils import create_request_payload, parse_charge_controller_info, parse_set_load_response, Bytes2Int
+from renogy.ble import DeviceManager, Device
+from renogy.utils import create_request_payload, parse_charge_controller_info, parse_set_load_response, Bytes2Int
 
 DEVICE_ID = 255
 POLL_INTERVAL = 30 # seconds

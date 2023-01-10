@@ -1,5 +1,5 @@
 import kilnpi.sensors
-import renogy.BTOneApp
+import renogy.btoneapp
 
 
 class RenogyRover(kilnpi.sensors.BaseSensor):
@@ -9,7 +9,7 @@ class RenogyRover(kilnpi.sensors.BaseSensor):
         super().__init__(group, name)
         self.adapter = adapter
         self.mac_addr = mac_addr
-        self.device = renogy.BTOneApp.BTOneApp(
+        self.device = renogy.btoneapp.BTOneApp(
             self.adapter,
             self.mac_addr,
             self.name,
@@ -19,10 +19,10 @@ class RenogyRover(kilnpi.sensors.BaseSensor):
         )
         self.last_data = None
 
-    def on_connected(self, app: renogy.BTOneApp.BTOneApp):
+    def on_connected(self, app: renogy.btoneapp.BTOneApp):
         app.poll_params()
 
-    def on_data_received(self, app: renogy.BTOneApp.BTOneApp, data):
+    def on_data_received(self, app: renogy.btoneapp.BTOneApp, data):
         self.last_data = data
 
     def get_point(self, **kwparams):
