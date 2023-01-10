@@ -18,6 +18,7 @@ class RenogyRover(kilnpi.sensors.BaseSensor):
             interval,
         )
         self.last_data = None
+        self.device.connect()
 
     def on_connected(self, app: renogy.btoneapp.BTOneApp):
         print("bt connected")
