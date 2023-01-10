@@ -18,6 +18,7 @@ class RenogyRover(kilnpi.sensors.BaseSensor):
             interval,
         )
         self.last_data = None
+        #TODO: connect needs to be started on a separate thread since it has its own run loop.
         self.device.connect()
 
     def on_connected(self, app: renogy.btoneapp.BTOneApp):

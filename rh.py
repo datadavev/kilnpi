@@ -33,15 +33,17 @@ def main():
     sensors.append(kilnpi.sensors.CurrentSensor(group, "Fan-1", adc_board, 1))
     sensors.append(kilnpi.sensors.CurrentSensor(group, "Fan-2", adc_board, 2))
     sensors.append(kilnpi.sensors.CurrentSensor(group, "Fan-3", adc_board, 3))
-    sensors.append(
-        kilnpi.renogy.RenogyRover(
-            group,
-            name="BT-TH-7724B9F3",
-            mac_addr="F4:60:77:24:B9:F3",
-            adapter="hci0",
-            interval=INTERVAL,
-        )
-    )
+    # The renogy thing starts it's own loop. Need to refactor to a separate
+    # app or different device control
+    #sensors.append(
+    #    kilnpi.renogy.RenogyRover(
+    #        group,
+    #        name="BT-TH-7724B9F3",
+    #        mac_addr="F4:60:77:24:B9:F3",
+    #        adapter="hci0",
+    #        interval=INTERVAL,
+    #    )
+    #)
     while True:
         with client.write_api(
             write_options=influxdb_client.WriteOptions(
