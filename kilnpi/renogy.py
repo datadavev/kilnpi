@@ -19,6 +19,17 @@ class RenogyRover(kilnpi.sensors.BaseSensor):
         self, group: str, name: str, mac_addr: str, adapter: str, interval: int
     ):
         super().__init__(group, name)
+        self.fields = {
+            "battery_percentage": kilnpi.sensors.SensorField(),
+            "battery_voltage": kilnpi.sensors.SensorField(),
+            "battery_current": kilnpi.sensors.SensorField(),
+            "load_voltage": kilnpi.sensors.SensorField(),
+            "load_current": kilnpi.sensors.SensorField(),
+            "load_power": kilnpi.sensors.SensorField(),
+            "pv_voltage": kilnpi.sensors.SensorField(),
+            "pv_current": kilnpi.sensors.SensorField(),
+            "pv_power": kilnpi.sensors.SensorField(),
+        }
         self.adapter = adapter
         self.mac_addr = mac_addr
         device = renogy.btoneapp.BTOneApp(
@@ -42,20 +53,14 @@ class RenogyRover(kilnpi.sensors.BaseSensor):
 
     def on_data_received(self, app: renogy.btoneapp.BTOneApp, data):
         self.last_data = data
+        for k in self.fields:
+            self.fields[k].setValue(self.last_data[k])
+
+    def update(self):
+        # updates are handled in the worker thread
+        pass
 
     def get_point(self, **kwparams):
         if self.last_data is None:
             raise ValueError(f"No data available for {self.name}")
-        point = (
-            self._preget_point()
-            .field("battery_percentage", self.last_data["battery_percentage"])
-            .field("battery_voltage", self.last_data["battery_voltage"])
-            .field("battery_current", self.last_data["battery_current"])
-            .field("load_voltage", self.last_data["load_voltage"])
-            .field("load_current", self.last_data["load_current"])
-            .field("load_power", self.last_data["load_power"])
-            .field("pv_voltage", self.last_data["pv_voltage"])
-            .field("pv_current", self.last_data["pv_current"])
-            .field("pv_power", self.last_data["pv_power"])
-        )
-        return point
+        return super().get_point(**kwparams)

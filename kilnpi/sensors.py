@@ -3,6 +3,7 @@ import math
 import ADCPi
 import adafruit_dht
 from influxdb_client import InfluxDBClient, Point, WritePrecision
+import numpy as np
 
 import kilnpi
 
@@ -34,11 +35,37 @@ class ADCBoard(ADCPi.ADCPi):
     def reference_voltage(self):
         return self.read_voltage(self.reference_channel)
 
+class SensorField:
+    def __init__(self):
+        self.value = None
+
+    def setValue(self, v):
+        self.value = v
+
+    def getValue(self):
+        return self.value
+
+
+class NumericSensorField(SensorField):
+    #TODO: need to mask out of range values
+    #TODO: value is the last unmasked value
+    #TODO: roll the list when at end
+    def __init__(self, label:str, history_length=10, dtype:str=np.float64):
+        super().__init__()
+        self.cpos = 0
+        self.value = np.zeros(history_length, dtype=dtype)
+
+    def getValue(self):
+        return
+
 
 class BaseSensor:
-    def __init__(self, group: str, name: str):
+    def __init__(self, group: str, name: str, fields: list[SensorField]=None):
         self.group = group
         self.name = name
+        self.fields = fields
+        if self.fields is None:
+            self.fields = {}
 
     def shutdown(self):
         pass
@@ -46,36 +73,50 @@ class BaseSensor:
     def _preget_point(self):
         return Point(self.group).tag("name", self.name)
 
+    def update(self):
+        # override this to set the value of each field
+        pass
+
     def get_point(self, **kwparams):
-        point = self._preget_point().field("v", 0.0)
+        self.update()
+        point = self._preget_point()
+        for k,v in self.fields.items():
+            point = point.field(k, v.getValue())
         return point
 
 
 class IPAddressSensor(BaseSensor):
     def __init__(self, group: str):
         super().__init__(group, "ipaddr")
+        self.fields = {"ip":SensorField()}
 
-    def get_point(self, **kwparams):
+    def update(self):
         ipaddress = kilnpi.get_ipaddress()
-        return self._preget_point().field("ip", ipaddress)
+        self.fields["ip"].setValue(ipaddress)
 
 
 class DHT22(BaseSensor):
     def __init__(self, pin, group: str, name: str):
         super().__init__(group, name)
         self.device = adafruit_dht.DHT22(pin)
+        self.fields = {
+            "T": SensorField(),
+            "RH": SensorField(),
+            "VP": SensorField(),
+            "AH": SensorField(),
+            "VPD": SensorField(),
+        }
 
-    def get_point(self, **kwparams):
+    def update(self):
         tc = self.device.temperature
         rh = self.device.humidity
-        point = (
-            self._preget_point()
-            .field("T", tc)
-            .field("RH", rh)
-            .field("VP", vaporPressure(tc, rh))
-            .field("AH", absoluteHumidity(tc, rh))
-        )
-        return point
+        self.fields["T"].setValue(tc)
+        self.fields["RH"].setValue(rh)
+        svp = saturatedVaporPressure(tc)
+        vp = vaporPressure(tc, rh)
+        self.fields["VP"].setValue(vp)
+        self.fields["VPD"].setValue(svp-vp)
+        self.fields["AH"].setValue(absoluteHumidity(tc, rh))
 
 
 class CurrentSensor(BaseSensor):
@@ -83,14 +124,21 @@ class CurrentSensor(BaseSensor):
         super().__init__(group, name)
         self.adc_board = adc_board
         self.channel = channel
+        self.fields = {
+            "v0": SensorField(),
+            "v": SensorField(),
+            "A": SensorField(),
+        }
 
-    def get_point(self, **kwparams):
+    def update(self):
         # https://www.amazon.com/dp/B0BB8YN9ZJ?psc=1&ref=ppx_yo2ov_dt_b_product_details
         # 0 amp = vcc / 2
         # 66 mV / A
-
         v_ref = self.adc_board.reference_voltage()
         v = self.adc_board.read_voltage(self.channel)
         v_0 = v_ref / 2.0
         amps = (v_0 - v) / 0.066
-        return self._preget_point().field("v0", v_0).field("v", v).field("A", amps)
+        self.fields["v0"].setValue(v_0)
+        self.fields["v"].setValue(v)
+        self.fields["A"].setValue(amps)
+
