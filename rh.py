@@ -13,10 +13,10 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 import kilnpi.sensors
 import kilnpi.renogy
 
-TERMINATE = False
 INTERVAL = 30
 
 def main():
+    TERMINATE = False
     logging.basicConfig(level=logging.DEBUG)
     L = logging.getLogger("kilnpi")
     org = "dave@vieglais.com"
@@ -47,27 +47,30 @@ def main():
     sensors.append(kilnpi.sensors.CurrentSensor(group, "Fan-2", adc_board, 2))
     sensors.append(kilnpi.sensors.CurrentSensor(group, "Fan-3", adc_board, 3))
     while not TERMINATE:
-        with client.write_api(
-            write_options=influxdb_client.WriteOptions(
-                batch_size=len(sensors),
-                flush_interval=10_000,
-                jitter_interval=2_000,
-                retry_interval=5_000,
-                max_retries=3,
-                max_retry_delay=15,
-                exponential_base=2,
-            )
-        ) as write_api:
-            for sensor in sensors:
-                try:
-                    point = sensor.get_point()
-                    L.info(point)
-                    write_api.write(bucket=bucket, org=org, record=point)
-                except RuntimeError as e:
-                    L.error(e)
-                except ValueError as e:
-                    L.error(e)
-        time.sleep(INTERVAL)
+        try:
+            with client.write_api(
+                write_options=influxdb_client.WriteOptions(
+                    batch_size=len(sensors),
+                    flush_interval=10_000,
+                    jitter_interval=2_000,
+                    retry_interval=5_000,
+                    max_retries=3,
+                    max_retry_delay=15,
+                    exponential_base=2,
+                )
+            ) as write_api:
+                for sensor in sensors:
+                    try:
+                        point = sensor.get_point()
+                        L.info(point)
+                        write_api.write(bucket=bucket, org=org, record=point)
+                    except RuntimeError as e:
+                        L.error(e)
+                    except ValueError as e:
+                        L.error(e)
+            time.sleep(INTERVAL)
+        except (KeyboardInterrupt, SystemExit):
+            TERMINATE = True
     for sensor in sensors:
         sensor.shutdown()
 
