@@ -1,9 +1,11 @@
+import collections
 import math
+import statistics
 
 import ADCPi
 import adafruit_dht
 from influxdb_client import InfluxDBClient, Point, WritePrecision
-import numpy as np
+
 
 import kilnpi
 
@@ -20,7 +22,7 @@ def vaporPressure(t: float, rh: float) -> float:
 
 def absoluteHumidity(t: float, rh: float) -> float:
     # g / m3
-    return (6.112 * math.exp((17.67*t)/(t+243.5)) * rh * 2.1674) / (273.15+t)
+    return (6.112 * math.exp((17.67 * t) / (t + 243.5)) * rh * 2.1674) / (273.15 + t)
 
 
 class ADCBoard(ADCPi.ADCPi):
@@ -35,6 +37,7 @@ class ADCBoard(ADCPi.ADCPi):
     def reference_voltage(self):
         return self.read_voltage(self.reference_channel)
 
+
 class SensorField:
     def __init__(self):
         self.value = None
@@ -46,21 +49,49 @@ class SensorField:
         return self.value
 
 
-class NumericSensorField(SensorField):
-    #TODO: need to mask out of range values
-    #TODO: value is the last unmasked value
-    #TODO: roll the list when at end
-    def __init__(self, label:str, history_length=10, dtype:str=np.float64):
+class OutlierSensorField(SensorField):
+    THRESHOLD = 3.0
+
+    def __init__(self, history_length=10):
         super().__init__()
-        self.cpos = 0
-        self.value = np.zeros(history_length, dtype=dtype)
+        self.buffer = collections.deque(maxlen=history_length)
+
+    def mean(self):
+        if len(self.buffer) > 1:
+            return statistics.mean(self.buffer)
+        raise ValueError("Insufficient data")
+
+    def stdev(self, mean=None):
+        if len(self.buffer) > 1:
+            return statistics.stdev(self.buffer, xbar=mean)
+        raise ValueError("Insufficient data")
+
+    def _isValid(self, v):
+        # wait until the buffer is half full before testing for outliers
+        if len(self.buffer) < 1+self.buffer.maxlen/2:
+            return True
+        try:
+            v_mean = self.mean()
+            v_stdev = self.stdev(mean=v_mean)
+            z_score = (v-v_mean)/v_stdev
+            if abs(z_score) > self.THRESHOLD:
+                return False
+        except ValueError:
+            pass
+        return True
+
+    def setValue(self, v):
+        if self._isValid(v):
+            self.buffer.append(v)
 
     def getValue(self):
-        return
+        if len(self.buffer) == 0:
+            return None
+        return self.buffer[-1]
 
 
 class BaseSensor:
-    def __init__(self, group: str, name: str, fields: list[SensorField]=None):
+    def __init__(self, group: str, name: str, fields: list[SensorField] = None):
         self.group = group
         self.name = name
         self.fields = fields
@@ -80,7 +111,7 @@ class BaseSensor:
     def get_point(self, **kwparams):
         self.update()
         point = self._preget_point()
-        for k,v in self.fields.items():
+        for k, v in self.fields.items():
             point = point.field(k, v.getValue())
         return point
 
@@ -88,7 +119,7 @@ class BaseSensor:
 class IPAddressSensor(BaseSensor):
     def __init__(self, group: str):
         super().__init__(group, "ipaddr")
-        self.fields = {"ip":SensorField()}
+        self.fields = {"ip": SensorField()}
 
     def update(self):
         ipaddress = kilnpi.get_ipaddress()
@@ -100,8 +131,8 @@ class DHT22(BaseSensor):
         super().__init__(group, name)
         self.device = adafruit_dht.DHT22(pin)
         self.fields = {
-            "T": SensorField(),
-            "RH": SensorField(),
+            "T": OutlierSensorField(),
+            "RH": OutlierSensorField(),
             "VP": SensorField(),
             "AH": SensorField(),
             "VPD": SensorField(),
@@ -115,7 +146,7 @@ class DHT22(BaseSensor):
         svp = saturatedVaporPressure(tc)
         vp = vaporPressure(tc, rh)
         self.fields["VP"].setValue(vp)
-        self.fields["VPD"].setValue(svp-vp)
+        self.fields["VPD"].setValue(svp - vp)
         self.fields["AH"].setValue(absoluteHumidity(tc, rh))
 
 
@@ -141,4 +172,3 @@ class CurrentSensor(BaseSensor):
         self.fields["v0"].setValue(v_0)
         self.fields["v"].setValue(v)
         self.fields["A"].setValue(amps)
-
