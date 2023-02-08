@@ -57,6 +57,7 @@ class OutlierSensorField(SensorField):
     def __init__(self, history_length=10):
         super().__init__()
         self.buffer = collections.deque(maxlen=history_length)
+        self._olcount = 0
 
     def mean(self):
         if len(self.buffer) > 1:
@@ -77,8 +78,11 @@ class OutlierSensorField(SensorField):
             v_stdev = self.stdev(mean=v_mean)
             z_score = (v-v_mean)/v_stdev
             _L.debug("z_score = %s", z_score)
-            if abs(z_score) > self.THRESHOLD:
+            # Accept the change if there's been two outliers in a row
+            if abs(z_score) > self.THRESHOLD and self._olcount < 3:
+                self._olcount += 1
                 return False
+            self._olcount = 0
         except ValueError:
             pass
         except ZeroDivisionError:
