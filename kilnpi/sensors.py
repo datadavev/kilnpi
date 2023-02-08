@@ -68,7 +68,7 @@ class OutlierSensorField(SensorField):
 
     def _isValid(self, v):
         # wait until the buffer is half full before testing for outliers
-        if len(self.buffer) < 1+self.buffer.maxlen/2:
+        if len(self.buffer) < self.buffer.maxlen:
             return True
         try:
             v_mean = self.mean()
