@@ -52,7 +52,7 @@ class SensorField:
 
 
 class OutlierSensorField(SensorField):
-    THRESHOLD = 3.0
+    THRESHOLD = 6.0
 
     def __init__(self, history_length=10):
         super().__init__()

@@ -1,6 +1,10 @@
+import logging
 import threading
 import kilnpi.sensors
 import renogy.btoneapp
+
+_L = logging.getLogger(__name__)
+
 
 class RenogyRoverCollector(threading.Thread):
     def __init__(self, device=None):
@@ -45,10 +49,11 @@ class RenogyRover(kilnpi.sensors.BaseSensor):
         self.worker.start()
 
     def shutdown(self):
+        _L.info("Renogy bt disconnected")
         self.worker.disconnect()
 
     def on_connected(self, app: renogy.btoneapp.BTOneApp):
-        print("Renogy bt connected")
+        _L.info("Renogy bt connected")
         app.poll_params()
 
     def on_data_received(self, app: renogy.btoneapp.BTOneApp, data):
