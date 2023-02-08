@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 import os
+import logging
 import signal
 import time
 import board
@@ -16,6 +17,8 @@ TERMINATE = False
 INTERVAL = 30
 
 def main():
+    logging.basicConfig(level=logging.DEBUG)
+    L = logging.getLogger("kilnpi")
     org = "dave@vieglais.com"
     client = influxdb_client.InfluxDBClient(
         url="https://us-east-1-1.aws.cloud2.influxdata.com",
@@ -58,12 +61,12 @@ def main():
             for sensor in sensors:
                 try:
                     point = sensor.get_point()
-                    print(point)
+                    L.info(point)
                     write_api.write(bucket=bucket, org=org, record=point)
                 except RuntimeError as e:
-                    print(e)
+                    L.error(e)
                 except ValueError as e:
-                    print(e)
+                    L.error(e)
         time.sleep(INTERVAL)
     for sensor in sensors:
         sensor.shutdown()

@@ -1,4 +1,5 @@
 import collections
+import logging
 import math
 import statistics
 
@@ -9,6 +10,7 @@ from influxdb_client import InfluxDBClient, Point, WritePrecision
 
 import kilnpi
 
+_L = logging.getLogger(__name__)
 
 def saturatedVaporPressure(t: float) -> float:
     return 0.6108 * math.exp(17.27 * t / (t + 237.3))
@@ -74,9 +76,12 @@ class OutlierSensorField(SensorField):
             v_mean = self.mean()
             v_stdev = self.stdev(mean=v_mean)
             z_score = (v-v_mean)/v_stdev
+            _L.debug("z_score = %s", z_score)
             if abs(z_score) > self.THRESHOLD:
                 return False
         except ValueError:
+            pass
+        except ZeroDivisionError:
             pass
         return True
 
