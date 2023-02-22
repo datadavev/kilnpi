@@ -2,6 +2,7 @@ import collections
 import logging
 import math
 import statistics
+import time
 
 import ADCPi
 import adafruit_dht
