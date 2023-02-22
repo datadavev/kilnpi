@@ -5,6 +5,10 @@ import statistics
 
 import ADCPi
 import adafruit_dht
+import adafruit_ads1x15.ads1115
+import adafruit_ads1x15.analog_in
+import board
+import busio
 from influxdb_client import InfluxDBClient, Point, WritePrecision
 
 
@@ -38,6 +42,25 @@ class ADCBoard(ADCPi.ADCPi):
 
     def reference_voltage(self):
         return self.read_voltage(self.reference_channel)
+
+class ADS1115Board:
+
+    def __init__(self):
+        self.i2c = nusio.I2C(board.SCL, board.SDA)
+        self.ads = adafruit_ads1x15.ads1115(self.i2c)
+        self.ads.mode = adafruit_ads1x15.ads1115.Mode.SINGLE
+        self.channels = [
+            adafruit_ads1x15.ads1115.AnalogIn(self.ads, adafruit_ads1x15.ads1115.P0),
+            adafruit_ads1x15.ads1115.AnalogIn(self.ads, adafruit_ads1x15.ads1115.P1),
+            adafruit_ads1x15.ads1115.AnalogIn(self.ads, adafruit_ads1x15.ads1115.P2),
+            adafruit_ads1x15.ads1115.AnalogIn(self.ads, adafruit_ads1x15.ads1115.P3),
+        ]
+
+    def get_reading(self, channel)->(int, float):
+        try:
+            return self.channels[channel].value, self.channels[channel].voltage
+        except Exception as e:
+            _L.error(e)
 
 
 class SensorField:
@@ -181,3 +204,27 @@ class CurrentSensor(BaseSensor):
         self.fields["v0"].setValue(v_0)
         self.fields["v"].setValue(v)
         self.fields["A"].setValue(amps)
+
+
+class WoodMoistureSensor(BaseSensor):
+    def __init__(self, group: str, name: str, ads1115:ADS1115Board, channel:int, nreps:int=5):
+        super().__init__(group, name)
+        self.ads_board = ads1115
+        self.channel = channel
+        self.fields = {
+            "raw": SensorField(),
+            "v": SensorField()
+        }
+        self.nreps = nreps
+        self.reading_sleep = 0.1
+
+    def update(self):
+        raw_buffer = []
+        v_buffer = []
+        for i in range(0, self.nreps):
+            _raw, voltage = self.ads_board.get_reading(self.channel)
+            raw_buffer.append(_raw)
+            v_buffer.append(voltage)
+            time.sleep(self.reading_sleep)
+        self.fields["raw"].setValue(statistics.mean(raw_buffer))
+        self.fields["v"].setValue(statistics.mean(v_buffer))

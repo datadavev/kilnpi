@@ -27,6 +27,7 @@ def main():
     )
     bucket = "kiln"
     adc_board = kilnpi.sensors.ADCBoard(0x68, 0x69, 18, reference=4)
+    ads115_board = kilnpi.sensors.ADS1115Board()
     sensors = []
     group = "kiln"
     sensors.append(kilnpi.sensors.IPAddressSensor(group))
@@ -46,6 +47,7 @@ def main():
     sensors.append(kilnpi.sensors.CurrentSensor(group, "Fan-1", adc_board, 1))
     sensors.append(kilnpi.sensors.CurrentSensor(group, "Fan-2", adc_board, 2))
     sensors.append(kilnpi.sensors.CurrentSensor(group, "Fan-3", adc_board, 3))
+    sensors.append(kilnpi.sensors.WoodMoistureSensor(group, "WM3", ads115_board, 2))
     while not TERMINATE:
         try:
             with client.write_api(
