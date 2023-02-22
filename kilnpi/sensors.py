@@ -50,10 +50,10 @@ class ADS1115Board:
         self.ads = adafruit_ads1x15.ads1115.ADS1115(self.i2c)
         self.ads.mode = adafruit_ads1x15.ads1115.Mode.SINGLE
         self.channels = [
-            adafruit_ads1x15.ads1115.AnalogIn(self.ads, adafruit_ads1x15.ads1115.P0),
-            adafruit_ads1x15.ads1115.AnalogIn(self.ads, adafruit_ads1x15.ads1115.P1),
-            adafruit_ads1x15.ads1115.AnalogIn(self.ads, adafruit_ads1x15.ads1115.P2),
-            adafruit_ads1x15.ads1115.AnalogIn(self.ads, adafruit_ads1x15.ads1115.P3),
+            adafruit_ads1x15.analog_in.AnalogIn(self.ads, adafruit_ads1x15.ads1115.P0),
+            adafruit_ads1x15.analog_in.AnalogIn(self.ads, adafruit_ads1x15.ads1115.P1),
+            adafruit_ads1x15.analog_in.AnalogIn(self.ads, adafruit_ads1x15.ads1115.P2),
+            adafruit_ads1x15.analog_in.AnalogIn(self.ads, adafruit_ads1x15.ads1115.P3),
         ]
 
     def get_reading(self, channel)->(int, float):
