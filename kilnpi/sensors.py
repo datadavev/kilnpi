@@ -47,7 +47,7 @@ class ADS1115Board:
 
     def __init__(self):
         self.i2c = busio.I2C(board.SCL, board.SDA)
-        self.ads = adafruit_ads1x15.ads1115(self.i2c)
+        self.ads = adafruit_ads1x15.ads1115.ADS1115(self.i2c)
         self.ads.mode = adafruit_ads1x15.ads1115.Mode.SINGLE
         self.channels = [
             adafruit_ads1x15.ads1115.AnalogIn(self.ads, adafruit_ads1x15.ads1115.P0),
