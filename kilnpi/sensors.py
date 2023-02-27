@@ -176,6 +176,8 @@ class DHT22(BaseSensor):
         rh = self.device.humidity
         self.fields["T"].setValue(tc)
         self.fields["RH"].setValue(rh)
+        tc = self.fields["T"].getValue()
+        rh = self.fields["RH"].getValue()
         svp = saturatedVaporPressure(tc)
         vp = vaporPressure(tc, rh)
         self.fields["VP"].setValue(vp)
