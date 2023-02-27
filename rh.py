@@ -48,6 +48,7 @@ def main():
     sensors.append(kilnpi.sensors.CurrentSensor(group, "Fan-2", adc_board, 2))
     sensors.append(kilnpi.sensors.CurrentSensor(group, "Fan-3", adc_board, 3))
     sensors.append(kilnpi.sensors.WoodMoistureSensor(group, "WM3", ads115_board, 2))
+    sensors.append(kilnpi.sensors.WoodMoistureSensor(group, "WM4", ads115_board, 3))
     while not TERMINATE:
         try:
             with client.write_api(
